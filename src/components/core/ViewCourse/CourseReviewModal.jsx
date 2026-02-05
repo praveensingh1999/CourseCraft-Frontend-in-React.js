@@ -44,7 +44,7 @@ function CourseReviewModal({ setReviewModal }) {
   }
 
   return (
-    <div className="fixed inset-0 z-1000 mt-0! grid h-screen w-screen place-items-center overflow-auto bg-white bg-opacity-10 backdrop-blur-sm">
+    <div className="fixed inset-0 z-1000 mt-0! grid h-screen w-screen place-items-center overflow-auto  bg-opacity-10 backdrop-blur-sm">
       <div className="my-10 w-11/12 max-w-[700px] rounded-lg border border-[#6E727F] bg-[#161D29]">
         {/* Modal Header */}
         <div className="flex items-center justify-between rounded-t-lg bg-[#2C333F] p-5">
