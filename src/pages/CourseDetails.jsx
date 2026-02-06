@@ -43,54 +43,27 @@ function CourseDetails() {
     })()
   }, [courseId])
 
-  /* ================= LOADING STATES ================= */
-  if (loading || !response) {
-    return (
-      <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">
-        <div className="spinner" />
-      </div>
-    )
-  }
+  /* ================= HOOKS FIRST ================= */
+  const courseDetails = response?.data?.courseDetails
 
-  if (!response.success) {
-    return <Error />
-  }
-
-  const {
-    _id: course_id,
-    courseName,
-    courseDescription,
-    thumbnail,
-    price,
-    whatYouWillLearn,
-    courseContent,
-    ratingAndReviews,
-    instructor,
-    studentsEnrolled,
-    createdAt,
-  } = response.data.courseDetails
-
-  /* ================= ENROLLMENT LOGIC (SINGLE SOURCE) ================= */
   const isEnrolled = useMemo(() => {
-    if (!user || !user.courses) return false
-    return user.courses.some((c) => c._id === course_id)
-  }, [user, course_id])
+    if (!user || !courseDetails) return false
+    return user.courses?.some((c) => c._id === courseDetails._id)
+  }, [user, courseDetails])
 
-  /* ================= AVG RATING ================= */
   const avgReviewCount = useMemo(() => {
-    return GetAvgRating(ratingAndReviews)
-  }, [ratingAndReviews])
+    return GetAvgRating(courseDetails?.ratingAndReviews || [])
+  }, [courseDetails])
 
-  /* ================= TOTAL LECTURES ================= */
   const totalNoOfLectures = useMemo(() => {
     let lectures = 0
-    courseContent?.forEach((sec) => {
+    courseDetails?.courseContent?.forEach((sec) => {
       lectures += sec.subSection?.length || 0
     })
     return lectures
-  }, [courseContent])
+  }, [courseDetails])
 
-  /* ================= BUY COURSE ================= */
+  /* ================= HANDLERS ================= */
   const handleBuyCourse = () => {
     if (user?.role === ACCOUNT_TYPE.INSTRUCTOR) {
       toast.error("You are an Instructor. You can't buy a course.")
@@ -112,6 +85,19 @@ function CourseDetails() {
     })
   }
 
+  /* ================= LOADING / ERROR ================= */
+  if (loading || !response) {
+    return (
+      <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">
+        <div className="spinner" />
+      </div>
+    )
+  }
+
+  if (!response.success) {
+    return <Error />
+  }
+
   if (paymentLoading) {
     return (
       <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center">
@@ -120,6 +106,21 @@ function CourseDetails() {
     )
   }
 
+  const {
+    _id: course_id,
+    courseName,
+    courseDescription,
+    thumbnail,
+    price,
+    whatYouWillLearn,
+    courseContent,
+    ratingAndReviews,
+    instructor,
+    studentsEnrolled,
+    createdAt,
+  } = courseDetails
+
+  /* ================= JSX ================= */
   return (
     <>
       {/* ================= HERO ================= */}
@@ -186,7 +187,7 @@ function CourseDetails() {
             {/* ================= DESKTOP CARD ================= */}
             <div className="hidden lg:block">
               <CourseDetailsCard
-                course={response.data.courseDetails}
+                course={courseDetails}
                 isEnrolled={isEnrolled}
                 handleBuyCourse={handleBuyCourse}
                 setConfirmationModal={setConfirmationModal}
@@ -198,13 +199,13 @@ function CourseDetails() {
 
       {/* ================= CONTENT ================= */}
       <div className="mx-auto px-4 lg:w-[1260px] text-[#F1F2FF]">
+        {/* What you'll learn */}
         <div className="border p-8 my-8">
           <h2 className="text-3xl font-semibold">What you'll learn</h2>
-          <ReactMarkdown className="mt-4">
-            {whatYouWillLearn}
-          </ReactMarkdown>
+          <ReactMarkdown className="mt-4">{whatYouWillLearn}</ReactMarkdown>
         </div>
 
+        {/* Course Content */}
         <div>
           <h2 className="text-3xl font-semibold">Course Content</h2>
           <p className="mt-2">
@@ -215,6 +216,29 @@ function CourseDetails() {
             {courseContent.map((section, index) => (
               <CourseAccordionBar key={index} course={section} />
             ))}
+          </div>
+        </div>
+
+        {/* Author */}
+        <div className="mb-12 py-4">
+          <h2 className="text-3xl font-semibold">Author</h2>
+          <div className="flex items-center gap-4 py-4">
+            <img
+              src={
+                instructor.image ||
+                `https://api.dicebear.com/5.x/initials/svg?seed=${instructor.firstName} ${instructor.lastName}`
+              }
+              alt="Author"
+              className="h-14 w-14 rounded-full object-cover"
+            />
+            <div className="flex flex-col">
+              <p className="text-lg font-medium">
+                {instructor.firstName} {instructor.lastName}
+              </p>
+              <p className="text-[#F1F2FF] text-sm">
+                {instructor?.additionalDetails?.about}
+              </p>
+            </div>
           </div>
         </div>
       </div>
