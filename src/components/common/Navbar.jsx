@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import {
   AiOutlineMenu,
   AiOutlineShoppingCart,
@@ -26,7 +26,11 @@ function Navbar() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false)
+  const [desktopCoursesOpen, setDesktopCoursesOpen] = useState(false)
 
+  const desktopDropdownRef = useRef(null)
+
+  /* ================= FETCH CATEGORIES ================= */
   useEffect(() => {
     const fetchCategories = async () => {
       setLoading(true)
@@ -34,12 +38,27 @@ function Navbar() {
         const res = await apiConnector("GET", categories.CATEGORIES_API)
         setSubLinks(res?.data?.data || [])
       } catch (error) {
-        console.log("Could not fetch Categories.", error)
+        console.log("Could not fetch categories", error)
       }
       setLoading(false)
     }
-
     fetchCategories()
+  }, [])
+
+  /* ================= CLOSE DESKTOP DROPDOWN ON OUTSIDE CLICK ================= */
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        desktopDropdownRef.current &&
+        !desktopDropdownRef.current.contains(e.target)
+      ) {
+        setDesktopCoursesOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
   const matchRoute = (route) => {
@@ -53,7 +72,7 @@ function Navbar() {
       }`}
     >
       <div className="flex w-11/12 max-w-[1260px] items-center justify-between">
-        {/* LOGO */}
+        {/* ================= LOGO ================= */}
         <Link to="/" onClick={() => setMobileMenuOpen(false)}>
           <img src={logo} alt="Logo" width={160} height={32} loading="lazy" />
         </Link>
@@ -64,36 +83,59 @@ function Navbar() {
             {NavbarLinks.map((link, index) => (
               <li key={index}>
                 {link.title === "Courses" ? (
-                  <div className="group relative flex cursor-pointer items-center gap-1">
-                    <p>Courses</p>
-                    <BsChevronDown />
+                  <div
+                    ref={desktopDropdownRef}
+                    className="relative"
+                  >
+                    <button
+                      onClick={() =>
+                        setDesktopCoursesOpen(!desktopCoursesOpen)
+                      }
+                      className="flex items-center gap-1"
+                    >
+                      Courses
+                      <BsChevronDown
+                        className={`transition-transform ${
+                          desktopCoursesOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
 
-                    <div className="invisible absolute left-1/2 top-full z-50 w-[260px] -translate-x-1/2 rounded-lg bg-[#F1F2FF] p-4 text-[#000814] opacity-0 transition-all group-hover:visible group-hover:opacity-100">
-                      {loading ? (
-                        <p className="text-center">Loading...</p>
-                      ) : subLinks?.length ? (
-                        subLinks
-                          .filter((s) => s?.courses?.length > 0)
-                          .map((s, i) => (
-                            <Link
-                              key={i}
-                              to={`/catalog/${s.name
-                                .replaceAll(" ", "-")
-                                .toLowerCase()}`}
-                              className="block rounded-lg px-3 py-2 hover:bg-[#C5C7D4]"
-                            >
-                              {s.name}
-                            </Link>
-                          ))
-                      ) : (
-                        <p className="text-center">No Courses</p>
-                      )}
-                    </div>
+                    {desktopCoursesOpen && (
+                      <div className="absolute left-1/2 top-full z-50 w-[260px] -translate-x-1/2 rounded-lg bg-[#F1F2FF] p-4 text-[#000814] shadow-lg">
+                        {loading ? (
+                          <p className="text-center">Loading...</p>
+                        ) : subLinks?.length ? (
+                          subLinks
+                            .filter((s) => s?.courses?.length > 0)
+                            .map((s, i) => (
+                              <Link
+                                key={i}
+                                to={`/catalog/${s.name
+                                  .replaceAll(" ", "-")
+                                  .toLowerCase()}`}
+                                onClick={() =>
+                                  setDesktopCoursesOpen(false)
+                                }
+                                className="block rounded-lg px-3 py-2 hover:bg-[#C5C7D4]"
+                              >
+                                {s.name}
+                              </Link>
+                            ))
+                        ) : (
+                          <p className="text-center">No Courses</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Link
                     to={link.path}
-                    className={matchRoute(link.path) ? "text-[#FFE83D]" : ""}
+                    className={
+                      matchRoute(link.path)
+                        ? "text-[#FFE83D]"
+                        : ""
+                    }
                   >
                     {link.title}
                   </Link>
@@ -155,10 +197,10 @@ function Navbar() {
                 {link.title === "Courses" ? (
                   <>
                     <button
-                      className="flex w-full items-center justify-between text-lg"
                       onClick={() =>
                         setMobileCoursesOpen(!mobileCoursesOpen)
                       }
+                      className="flex w-full items-center justify-between text-lg"
                     >
                       <span>Courses</span>
                       <BsChevronDown
