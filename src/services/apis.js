@@ -1,4 +1,4 @@
-const BASE_URL = "https://coursecraft-backend-with-node-js-1.onrender.com/api/v1"
+const BASE_URL = "https://coursecraft-backend-with-node-js-2.onrender.com/api/v1"
 //http://localhost:4000/api/v1/course/showAllCategories
 // AUTH ENDPOINTS
 export const endpoints = {
