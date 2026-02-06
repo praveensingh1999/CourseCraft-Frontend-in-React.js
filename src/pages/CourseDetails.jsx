@@ -30,6 +30,7 @@ function CourseDetails() {
 
   const [response, setResponse] = useState(null)
   const [confirmationModal, setConfirmationModal] = useState(null)
+  const [isActive, setIsActive] = useState([]) // safe default array
 
   /* ================= FETCH COURSE ================= */
   useEffect(() => {
@@ -47,8 +48,8 @@ function CourseDetails() {
   const courseDetails = response?.data?.courseDetails
 
   const isEnrolled = useMemo(() => {
-    if (!user || !courseDetails) return false
-    return user.courses?.some((c) => c._id === courseDetails._id)
+    if (!user || !user.courses || !courseDetails) return false
+    return user.courses.some((c) => c?._id === courseDetails?._id)
   }, [user, courseDetails])
 
   const avgReviewCount = useMemo(() => {
@@ -83,6 +84,14 @@ function CourseDetails() {
       btn1Handler: () => navigate("/login"),
       btn2Handler: () => setConfirmationModal(null),
     })
+  }
+
+  const handleActive = (id) => {
+    setIsActive(
+      !isActive.includes(id)
+        ? [...isActive, id]
+        : isActive.filter((e) => e !== id)
+    )
   }
 
   /* ================= LOADING / ERROR ================= */
@@ -141,11 +150,11 @@ function CourseDetails() {
                 <span className="text-[#FFE83D]">{avgReviewCount}</span>
                 <RatingStars Review_Count={avgReviewCount} Star_Size={24} />
                 <span>({ratingAndReviews.length} reviews)</span>
-                <span>{studentsEnrolled.length} students</span>
+                <span>{studentsEnrolled?.length || 0} students</span>
               </div>
 
               <p>
-                Created by {instructor.firstName} {instructor.lastName}
+                Created by {instructor?.firstName} {instructor?.lastName}
               </p>
 
               <div className="flex gap-5">
@@ -209,12 +218,17 @@ function CourseDetails() {
         <div>
           <h2 className="text-3xl font-semibold">Course Content</h2>
           <p className="mt-2">
-            {courseContent.length} sections • {totalNoOfLectures} lectures
+            {courseContent?.length || 0} sections • {totalNoOfLectures} lectures
           </p>
 
           <div className="mt-4">
-            {courseContent.map((section, index) => (
-              <CourseAccordionBar key={index} course={section} />
+            {courseContent?.map((section, index) => (
+              <CourseAccordionBar
+                key={index}
+                course={section}
+                isActive={isActive}
+                handleActive={handleActive}
+              />
             ))}
           </div>
         </div>
@@ -225,15 +239,15 @@ function CourseDetails() {
           <div className="flex items-center gap-4 py-4">
             <img
               src={
-                instructor.image ||
-                `https://api.dicebear.com/5.x/initials/svg?seed=${instructor.firstName} ${instructor.lastName}`
+                instructor?.image ||
+                `https://api.dicebear.com/5.x/initials/svg?seed=${instructor?.firstName} ${instructor?.lastName}`
               }
               alt="Author"
               className="h-14 w-14 rounded-full object-cover"
             />
             <div className="flex flex-col">
               <p className="text-lg font-medium">
-                {instructor.firstName} {instructor.lastName}
+                {instructor?.firstName} {instructor?.lastName}
               </p>
               <p className="text-[#F1F2FF] text-sm">
                 {instructor?.additionalDetails?.about}
