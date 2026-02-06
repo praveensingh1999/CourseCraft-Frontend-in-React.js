@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react"
-import { AiOutlineMenu, AiOutlineShoppingCart, AiOutlineClose } from "react-icons/ai"
+import {
+  AiOutlineMenu,
+  AiOutlineShoppingCart,
+  AiOutlineClose,
+} from "react-icons/ai"
 import { BsChevronDown } from "react-icons/bs"
 import { useSelector } from "react-redux"
 import { Link, matchPath, useLocation } from "react-router-dom"
@@ -20,20 +24,22 @@ function Navbar() {
   const [subLinks, setSubLinks] = useState([])
   const [loading, setLoading] = useState(false)
 
-  
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false)
 
   useEffect(() => {
-    (async () => {
+    const fetchCategories = async () => {
       setLoading(true)
       try {
         const res = await apiConnector("GET", categories.CATEGORIES_API)
-        setSubLinks(res.data.data)
+        setSubLinks(res?.data?.data || [])
       } catch (error) {
         console.log("Could not fetch Categories.", error)
       }
       setLoading(false)
-    })()
+    }
+
+    fetchCategories()
   }, [])
 
   const matchRoute = (route) => {
@@ -41,25 +47,27 @@ function Navbar() {
   }
 
   return (
-    <header className={`relative z-50 flex h-14 items-center justify-center border-b border-b-richblack-700 ${
-      location.pathname !== "/" ? "bg-[#161D29]" : ""
-    }`}>
+    <header
+      className={`relative z-50 flex h-14 items-center justify-center border-b border-b-richblack-700 ${
+        location.pathname !== "/" ? "bg-[#161D29]" : ""
+      }`}
+    >
       <div className="flex w-11/12 max-w-[1260px] items-center justify-between">
-
         {/* LOGO */}
         <Link to="/" onClick={() => setMobileMenuOpen(false)}>
           <img src={logo} alt="Logo" width={160} height={32} loading="lazy" />
         </Link>
 
-        {/* DESKTOP NAV */}
+        {/* ================= DESKTOP NAV ================= */}
         <nav className="hidden md:block">
           <ul className="flex gap-x-6 text-[#DBDDEA]">
             {NavbarLinks.map((link, index) => (
               <li key={index}>
                 {link.title === "Courses" ? (
                   <div className="group relative flex cursor-pointer items-center gap-1">
-                    <p>{link.title}</p>
+                    <p>Courses</p>
                     <BsChevronDown />
+
                     <div className="invisible absolute left-1/2 top-full z-50 w-[260px] -translate-x-1/2 rounded-lg bg-[#F1F2FF] p-4 text-[#000814] opacity-0 transition-all group-hover:visible group-hover:opacity-100">
                       {loading ? (
                         <p className="text-center">Loading...</p>
@@ -69,7 +77,9 @@ function Navbar() {
                           .map((s, i) => (
                             <Link
                               key={i}
-                              to={`/catalog/${s.name.replaceAll(" ", "-").toLowerCase()}`}
+                              to={`/catalog/${s.name
+                                .replaceAll(" ", "-")
+                                .toLowerCase()}`}
                               className="block rounded-lg px-3 py-2 hover:bg-[#C5C7D4]"
                             >
                               {s.name}
@@ -93,27 +103,34 @@ function Navbar() {
           </ul>
         </nav>
 
-        {/* DESKTOP ACTIONS */}
+        {/* ================= DESKTOP ACTIONS ================= */}
         <div className="hidden md:flex items-center gap-x-4">
           {user && user.role !== ACCOUNT_TYPE.INSTRUCTOR && (
             <Link to="/dashboard/cart" className="relative">
               <AiOutlineShoppingCart className="text-2xl text-[#787d92]" />
               {totalItems > 0 && (
-                <span className="absolute -bottom-1 -right-2 h-5 w-5 rounded-full bg-blue-600 text-xs text-white grid place-items-center">
+                <span className="absolute -bottom-1 -right-2 grid h-5 w-5 place-items-center rounded-full bg-blue-600 text-xs text-white">
                   {totalItems}
                 </span>
               )}
             </Link>
           )}
-          {token ? <ProfileDropdown /> : (
+
+          {token ? (
+            <ProfileDropdown />
+          ) : (
             <>
-              <Link to="/login"><button className="btn  text-white cursor-pointer">Log in</button></Link>
-              <Link to="/signup"><button className="btn  text-white cursor-pointer">Sign up</button></Link>
+              <Link to="/login">
+                <button className="btn text-white">Log in</button>
+              </Link>
+              <Link to="/signup">
+                <button className="btn text-white">Sign up</button>
+              </Link>
             </>
           )}
         </div>
 
-        {/* MOBILE MENU BUTTON */}
+        {/* ================= MOBILE MENU BUTTON ================= */}
         <button
           className="md:hidden text-[#AFB2BF]"
           onClick={() => setMobileMenuOpen(true)}
@@ -124,8 +141,8 @@ function Navbar() {
 
       {/* ================= MOBILE MENU ================= */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-999 bg-[#000814] md:hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
+        <div className="fixed inset-0 z-[999] bg-[#000814] md:hidden">
+          <div className="flex items-center justify-between border-b border-gray-700 px-6 py-4">
             <img src={logo} alt="logo" width={120} />
             <button onClick={() => setMobileMenuOpen(false)}>
               <AiOutlineClose size={26} className="text-white" />
@@ -134,14 +151,61 @@ function Navbar() {
 
           <nav className="flex flex-col gap-4 px-6 py-6 text-white">
             {NavbarLinks.map((link, i) => (
-              <Link
-                key={i}
-                to={link.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-lg border-b border-gray-700 pb-2"
-              >
-                {link.title}
-              </Link>
+              <div key={i} className="border-b border-gray-700 pb-2">
+                {link.title === "Courses" ? (
+                  <>
+                    <button
+                      className="flex w-full items-center justify-between text-lg"
+                      onClick={() =>
+                        setMobileCoursesOpen(!mobileCoursesOpen)
+                      }
+                    >
+                      <span>Courses</span>
+                      <BsChevronDown
+                        className={`transition-transform ${
+                          mobileCoursesOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {mobileCoursesOpen && (
+                      <div className="mt-3 ml-4 flex flex-col gap-2 text-sm text-gray-300">
+                        {loading ? (
+                          <p>Loading...</p>
+                        ) : subLinks?.length ? (
+                          subLinks
+                            .filter((s) => s?.courses?.length > 0)
+                            .map((s, idx) => (
+                              <Link
+                                key={idx}
+                                to={`/catalog/${s.name
+                                  .replaceAll(" ", "-")
+                                  .toLowerCase()}`}
+                                onClick={() => {
+                                  setMobileMenuOpen(false)
+                                  setMobileCoursesOpen(false)
+                                }}
+                                className="hover:text-yellow-400"
+                              >
+                                {s.name}
+                              </Link>
+                            ))
+                        ) : (
+                          <p>No Courses</p>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    to={link.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-lg"
+                  >
+                    {link.title}
+                  </Link>
+                )}
+              </div>
             ))}
 
             <div className="mt-4 flex flex-col gap-3">
@@ -149,8 +213,18 @@ function Navbar() {
                 <ProfileDropdown />
               ) : (
                 <>
-                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
-                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Sign up</Link>
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Log in
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign up
+                  </Link>
                 </>
               )}
             </div>
