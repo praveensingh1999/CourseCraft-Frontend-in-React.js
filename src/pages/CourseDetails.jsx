@@ -458,7 +458,7 @@ function CourseDetails() {
           </div>
 
           {/* ===== COURSE CARD (DESKTOP) ===== */}
-          <div className="right-4 top-[60px] mx-auto hidden min-h-[600px] w-1/3 max-w-[410px] translate-y-24 md:translate-y-0 lg:absolute  lg:block">
+          <div className="right-4 top-[60px] mx-auto hidden min-h-[600px] w-1/3 max-w-[410px] translate-y-24 md:translate-y-0 lg:absolute lg:block lg:-ml-[40px]">
             <CourseDetailsCard
               course={response.data.courseDetails}
               setConfirmationModal={setConfirmationModal}
